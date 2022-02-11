@@ -1,6 +1,7 @@
 #!/bin/bash
 work_dir=/home/ec2-user/bbbackup
 
+mount -a
 cfg_file=$work_dir/bbbackup.cfg
 backup_path=`cat $cfg_file |grep "filepath =" |cut -d= -f2 |tr -d ' '`
 backup_dir=BACKUP_`date --date="-1 day" +%Y%m%d`_UTC
