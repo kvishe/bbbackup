@@ -17,7 +17,7 @@ pipelines:
           script:
             - pip install cfn-lint
             # Validate CloudFormation yaml/json templates https://github.com/aws-cloudformation/cfn-python-lint
-            - cfn-lint -I template.yaml
+            - cfn-lint -I bbbackup_cf.json
   branches:
     master:
       - parallel:
