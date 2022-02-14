@@ -115,7 +115,7 @@
         },
         "AMIID": {
             "Description": "AMI ID of EC2",
-            "Type": "String"
+            "Type": "AWS::EC2::Image::Id"
         },
         "SSHLocation": {
             "Description": "The IP address range that can be used to SSH to the EC2 instances",
