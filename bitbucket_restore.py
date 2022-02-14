@@ -1,7 +1,7 @@
 import boto3
 import time
-
-instanceid = "i-08c9e55c1d460ca4c"
+import os
+instanceid = os.environ['InstanceID'] 
 ec2 = boto3.client("ec2")
 ssm = boto3.client("ssm")
 
@@ -25,6 +25,3 @@ def lambda_handler(event, context):
     output = ssm.get_command_invocation(CommandId=command_id, InstanceId=instanceid)
     print(output)
     
-    ec2.stop_instances(InstanceIds=[instanceid])
-    print('Stopped instance: ' + instanceid)
-

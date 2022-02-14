@@ -43,3 +43,5 @@ if [ -d $backup_path/$backup_dir/$restore_repo ];then
 else
         echo "Given repo is not found in the backup please check the repo name."
 fi
+
+shutdown -h
