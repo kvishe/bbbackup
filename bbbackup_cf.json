@@ -194,7 +194,7 @@
                     {
                         "Key": "Name",
                         "Value": {
-                            "Ref": "VolumeName"
+                            "Ref": "EFSVolumeName"
                         }
                     }
                 ],
@@ -345,10 +345,10 @@
             "Type": "AWS::EC2::Instance",
             "Properties": {
                 "ImageId": {
-                    "Ref": "ImageId"
+                    "Ref": "AMIID"
                 },
                 "KeyName": {
-                    "Ref": "KeyName"
+                    "Ref": "EC2KeyName"
                 },
                 "InstanceType": {
                     "Ref": "InstanceType"
