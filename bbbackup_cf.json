@@ -103,7 +103,7 @@
             "Type": "AWS::EC2::Subnet::Id",
             "Description": "The subnet where to launch the service"
         },
-        "KeyName": {
+        "EC2KeyName": {
             "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instances",
             "Type": "AWS::EC2::KeyPair::KeyName",
             "ConstraintDescription": "must be the name of an existing EC2 KeyPair."
@@ -111,16 +111,10 @@
         "InstanceType": {
             "Description": "WebServer EC2 instance type",
             "Type": "String",
-            "Default": "t2.micro",
-            "AllowedValues": [
-                "t1.micro",
-                "t2.nano",
-                "t2.micro"
-            ],
-            "ConstraintDescription": "must be a valid EC2 instance type."
+            "Default": "t2.micro"
         },
-        "ImageId": {
-            "Description": "Image ID of EC2",
+        "AMIID": {
+            "Description": "AMI ID of EC2",
             "Type": "String"
         },
         "SSHLocation": {
@@ -132,7 +126,7 @@
             "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
             "ConstraintDescription": "must be a valid IP CIDR range of the form x.x.x.x/x."
         },
-        "VolumeName": {
+        "EFSVolumeName": {
             "Description": "Name of a EFS Volume",
             "Type": "String"
         },
@@ -155,12 +149,6 @@
             "Properties": {
                 "GroupDescription": "Enable HTTP access via port 80 locked down to the load balancer + SSH access",
                 "SecurityGroupIngress": [
-                    {
-                        "IpProtocol": "tcp",
-                        "FromPort": "80",
-                        "ToPort": "80",
-                        "CidrIp": "0.0.0.0/0"
-                    },
                     {
                         "IpProtocol": "tcp",
                         "FromPort": "22",
@@ -469,6 +457,41 @@
             "Metadata": {
                 "AWS::CloudFormation::Designer": {
                     "id": "a983dcb6-79b7-472f-b187-6773f190d20f"
+                }
+            }
+        },
+        "ScheduledRule": {
+            "Type": "AWS::Events::Rule",
+            "Properties": {
+                "Description": "ScheduledRule",
+                "ScheduleExpression": "rate(1 day)",
+                "State": "ENABLED",
+                "Targets": [
+                    {
+                        "Arn": {
+                            "Fn::GetAtt": [
+                                "BackupLambda",
+                                "Arn"
+                            ]
+                        },
+                        "Id": "TargetFunctionV1"
+                    }
+                ]
+            }
+        },
+        "PermissionForEventsToInvokeLambda": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+                "FunctionName": {
+                    "Ref": "BackupLambda"
+                },
+                "Action": "lambda:InvokeFunction",
+                "Principal": "events.amazonaws.com",
+                "SourceArn": {
+                    "Fn::GetAtt": [
+                        "ScheduledRule",
+                        "Arn"
+                    ]
                 }
             }
         }
