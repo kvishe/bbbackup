@@ -1,0 +1,477 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Metadata": {
+        "AWS::CloudFormation::Designer": {
+            "1995ef5c-49a9-4ad5-97a4-f4b83c3c1492": {
+                "size": {
+                    "width": 60,
+                    "height": 60
+                },
+                "position": {
+                    "x": 420,
+                    "y": 150
+                },
+                "z": 1,
+                "embeds": []
+            },
+            "51526a99-e008-4d09-bf85-d61aeadd60bd": {
+                "size": {
+                    "width": 60,
+                    "height": 60
+                },
+                "position": {
+                    "x": 260,
+                    "y": 60
+                },
+                "z": 1,
+                "embeds": [],
+                "isassociatedwith": [
+                    "5ab5bb40-72d4-4258-b958-164075c85ffc"
+                ]
+            },
+            "5ab5bb40-72d4-4258-b958-164075c85ffc": {
+                "size": {
+                    "width": 60,
+                    "height": 60
+                },
+                "position": {
+                    "x": 420,
+                    "y": 60
+                },
+                "z": 1,
+                "embeds": []
+            },
+            "03591a19-4e33-42c9-8103-ba12f2df3062": {
+                "size": {
+                    "width": 60,
+                    "height": 60
+                },
+                "position": {
+                    "x": 30,
+                    "y": 60
+                },
+                "z": 1,
+                "embeds": []
+            },
+            "f20de804-d8a0-423e-9b32-e28efacfc752": {
+                "size": {
+                    "width": 60,
+                    "height": 60
+                },
+                "position": {
+                    "x": 150,
+                    "y": 60
+                },
+                "z": 1,
+                "embeds": [],
+                "isassociatedwith": [
+                    "03591a19-4e33-42c9-8103-ba12f2df3062"
+                ]
+            },
+            "810b968d-64bc-4d46-b3e1-22bcb7f40488": {
+                "size": {
+                    "width": 60,
+                    "height": 60
+                },
+                "position": {
+                    "x": 30,
+                    "y": 150
+                },
+                "z": 1,
+                "embeds": []
+            },
+            "a983dcb6-79b7-472f-b187-6773f190d20f": {
+                "size": {
+                    "width": 60,
+                    "height": 60
+                },
+                "position": {
+                    "x": 260,
+                    "y": 150
+                },
+                "z": 1,
+                "embeds": []
+            }
+        }
+    },
+    "Parameters": {
+        "VPC": {
+            "Type": "AWS::EC2::VPC::Id",
+            "Description": "The VPC identity"
+        },
+        "SubnetID": {
+            "Type": "AWS::EC2::Subnet::Id",
+            "Description": "The subnet where to launch the service"
+        },
+        "KeyName": {
+            "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+            "Type": "AWS::EC2::KeyPair::KeyName",
+            "ConstraintDescription": "must be the name of an existing EC2 KeyPair."
+        },
+        "InstanceType": {
+            "Description": "WebServer EC2 instance type",
+            "Type": "String",
+            "Default": "t2.micro",
+            "AllowedValues": [
+                "t1.micro",
+                "t2.nano",
+                "t2.micro"
+            ],
+            "ConstraintDescription": "must be a valid EC2 instance type."
+        },
+        "ImageId": {
+            "Description": "Image ID of EC2",
+            "Type": "String"
+        },
+        "SSHLocation": {
+            "Description": "The IP address range that can be used to SSH to the EC2 instances",
+            "Type": "String",
+            "MinLength": "9",
+            "MaxLength": "18",
+            "Default": "0.0.0.0/0",
+            "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+            "ConstraintDescription": "must be a valid IP CIDR range of the form x.x.x.x/x."
+        },
+        "VolumeName": {
+            "Description": "Name of a EFS Volume",
+            "Type": "String"
+        },
+        "BitBucketUserId": {
+            "Description": "BitBucket UserId",
+            "Type": "String"
+        },
+        "BitBucketAppPassword": {
+            "Description": "BitBucket App Password",
+            "Type": "String"
+        },
+        "BitBucketTeam": {
+            "Description": "BitBucket Team",
+            "Type": "String"
+        }
+    },
+    "Resources": {
+        "ServerSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Enable HTTP access via port 80 locked down to the load balancer + SSH access",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "80",
+                        "ToPort": "80",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": {
+                            "Ref": "SSHLocation"
+                        }
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "VPC"
+                }
+            },
+            "Metadata": {
+                "AWS::CloudFormation::Designer": {
+                    "id": "5ab5bb40-72d4-4258-b958-164075c85ffc"
+                }
+            }
+        },
+        "EFSSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Enable EFS access to EC2",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "-1",
+                        "FromPort": "-1",
+                        "ToPort": "-1",
+                        "SourceSecurityGroupId": {
+                            "Ref": "ServerSecurityGroup"
+                        }
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "VPC"
+                }
+            }
+        },
+        "EFSFileSystem": {
+            "Type": "AWS::EFS::FileSystem",
+            "Properties": {
+                "FileSystemTags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Ref": "VolumeName"
+                        }
+                    }
+                ],
+                "Encrypted": true
+            },
+            "Metadata": {
+                "AWS::CloudFormation::Designer": {
+                    "id": "1995ef5c-49a9-4ad5-97a4-f4b83c3c1492"
+                }
+            }
+        },
+        "EFSMountTarget": {
+            "Type": "AWS::EFS::MountTarget",
+            "Properties": {
+                "FileSystemId": {
+                    "Ref": "EFSFileSystem"
+                },
+                "SecurityGroups": [
+                    {
+                        "Ref": "EFSSecurityGroup"
+                    }
+                ],
+                "SubnetId": {
+                    "Ref": "SubnetID"
+                }
+            }
+        },
+        "SSMRoleForLambda": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "ManagedPolicyArns": [
+                    "arn:aws:iam::aws:policy/AmazonSSMFullAccess"
+                ],
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Sid": "VisualEditor0",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "ec2:DescribeInstances",
+                                        "ec2:Start*",
+                                        "ec2:Stop*",
+                                        "ec2:DescribeInstanceStatus"
+                                    ],
+                                    "Resource": "*"
+                                },
+                                {
+                                    "Sid": "VisualEditor1",
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "logs:CreateLogStream",
+                                        "logs:CreateLogGroup",
+                                        "logs:PutLogEvents"
+                                    ],
+                                    "Resource": "arn:aws:logs:*:*:*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "ec2_start_stop_access"
+                    }
+                ],
+                "RoleName": "SSMRoleForLambda"
+            },
+            "Metadata": {
+                "AWS::CloudFormation::Designer": {
+                    "id": "810b968d-64bc-4d46-b3e1-22bcb7f40488"
+                }
+            }
+        },
+        "SSMRoleForEC2": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "ManagedPolicyArns": [
+                    "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+                ],
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Sid": "VisualEditor0",
+                                    "Effect": "Allow",
+                                    "Action": "ssm:PutParameter",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "ssm_param_put_access"
+                    }
+                ],
+                "RoleName": "SSMRoleForEC2"
+            },
+            "Metadata": {
+                "AWS::CloudFormation::Designer": {
+                    "id": "03591a19-4e33-42c9-8103-ba12f2df3062"
+                }
+            }
+        },
+        "InstanceProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+                "InstanceProfileName": "InstanceProfileForEC2",
+                "Roles": [
+                    {
+                        "Ref": "SSMRoleForEC2"
+                    }
+                ]
+            },
+            "Metadata": {
+                "AWS::CloudFormation::Designer": {
+                    "id": "f20de804-d8a0-423e-9b32-e28efacfc752"
+                }
+            }
+        },
+        "EC2Instance": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "ImageId": {
+                    "Ref": "ImageId"
+                },
+                "KeyName": {
+                    "Ref": "KeyName"
+                },
+                "InstanceType": {
+                    "Ref": "InstanceType"
+                },
+                "SecurityGroupIds": [
+                    {
+                        "Ref": "ServerSecurityGroup"
+                    }
+                ],
+                "IamInstanceProfile": {
+                    "Ref": "InstanceProfile"
+                },
+                "SubnetId": {
+                    "Ref": "SubnetID"
+                },
+		"Tags" : [ {
+  "Key" : "Name",
+  "Value" : "BitbucketBackup"
+} ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#!/bin/bash\n",
+                                "EFS_FILE_SYS_ID=",
+                                {
+                                    "Ref": "EFSFileSystem"
+                                },
+                                "\n",
+                                "BB_USER_ID=",
+                                {
+                                    "Ref": "BitBucketUserId"
+                                },
+                                "\n",
+                                "BB_PASSWD=",
+                                {
+                                    "Ref": "BitBucketAppPassword"
+                                },
+                                "\n",
+                                "BB_TEAM=",
+                                {
+                                    "Ref": "BitBucketTeam"
+                                },
+                                "\n",
+                                "Region=",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\n",
+                                "amazon-linux-extras install epel -y\n",
+                                "yum install amazon-efs-utils hub -y\n",
+                                "mkdir /home/ec2-user/bbbackup\n",
+                                "mkdir /clonedbackups\n",
+                                "mount -t efs -o tls $EFS_FILE_SYS_ID:/ /clonedbackups\n",
+                                "echo \"$EFS_FILE_SYS_ID:/ /clonedbackups efs tls 0 0 \" >> /etc/fstab\n",
+                                "git clone https://github.com/kvishe/bbbackup /home/ec2-user/bbbackup\n",
+                                "cd /home/ec2-user/bbbackup\n",
+                                "python3 -m venv BitBucketBackup\n",
+                                "source BitBucketBackup/bin/activate\n",
+                                "pip install --upgrade pip\n",
+                                "pip install -r requirements.txt\n",
+                                "ssh-keygen -b 2048 -t rsa -f ~/.ssh/id_rsa -q -N ''\n",
+                                "Key=`cat ~/.ssh/id_rsa.pub`\n",
+                                "aws ssm put-parameter --name \"bb-ssh-pub-key\" --value \"$Key\" --type \"String\" --overwrite --region \"$Region\"\n",
+                                "echo \"bitbucket.org ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAQEAubiN81eDcafrgMeLzaFPsw2kNvEcqTKl/VqLat/MaB33pZy0y3rJZtnqwR2qOOvbwKZYKiEO1O6VqNEBxKvJJelCq0dTXWT5pbO2gDXC6h6QDXCaHo6pOHGPUy+YBaGQRGuSusMEASYiWunYN0vCAI8QaXnWMXNMdFP3jHAJH0eDsoiGnLPBlBp4TNm6rYI74nMzgz3B9IikW4WVK+dc8KZJZWYjAuORU3jc1c/NPskD2ASinf8v3xnfXeukU0sJ5N6m5E8VLjObPEO+mN2t/FZTMZLiFqPWc/ALSqnMnnhwrNi2rbfg/rd/IpL8Le3pSBne8+seeFVBoGqzHM9yXw==\" >> ~/.ssh/known_hosts\n",
+                                "sed -i \"s/bb_userid/$BB_USER_ID/\" /home/ec2-user/bbbackup/bbbackup.cfg\n",
+                                "sed -i \"s/bb_password/$BB_PASSWD/\" /home/ec2-user/bbbackup/bbbackup.cfg\n",
+                                "sed -i \"s/bb_team/$BB_TEAM/\" /home/ec2-user/bbbackup/bbbackup.cfg\n"
+                            ]
+                        ]
+                    }
+                }
+            },
+            "Metadata": {
+                "AWS::CloudFormation::Designer": {
+                    "id": "51526a99-e008-4d09-bf85-d61aeadd60bd"
+                }
+            }
+        },
+        "BackupLambda": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "BitBucket_Backup",
+                "Handler": "index.lambda_handler",
+                "PackageType": "Zip",
+                "Runtime": "python3.9",
+                "Timeout": 900,
+                "Role": {
+                    "Fn::GetAtt": [
+                        "SSMRoleForLambda",
+                        "Arn"
+                    ]
+                },
+                "Code": {
+                    "ZipFile": "import boto3\nimport time\nimport os\ninstanceid = os.environ['InstanceID'] \nec2 = boto3.client(\"ec2\")\nssm = boto3.client(\"ssm\")\n\ndef lambda_handler(event, context):\n\n  ec2.start_instances(InstanceIds=[instanceid])\n\n  waiter = ec2.get_waiter(\"instance_running\")\n\n  waiter.wait(InstanceIds=[instanceid])\n\n  print(\"Instance \" + instanceid + \" is started and running\")\n\n  time.sleep(60)\n\n\n  response = ssm.send_command(\n\n  InstanceIds = [instanceid],\n\n  DocumentName = \"AWS-RunShellScript\",\n\n  Parameters = {\n    \"commands\": [\"/home/ec2-user/bbbackup/bbsync.sh\"]\n  },\n\n  )\n\n  command_id = response[\"Command\"][\"CommandId\"]\n\n  time.sleep(10)\n\n  output = ssm.get_command_invocation(CommandId=command_id,\n  InstanceId=instanceid)\n\n  print(output)\n"
+                },
+                "Environment": {
+                    "Variables": {
+                        "InstanceID": {
+                            "Ref": "EC2Instance"
+                        }
+                    }
+                }
+            },
+            "Metadata": {
+                "AWS::CloudFormation::Designer": {
+                    "id": "a983dcb6-79b7-472f-b187-6773f190d20f"
+                }
+            }
+        }
+    }
+}
+
