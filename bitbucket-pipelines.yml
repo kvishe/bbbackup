@@ -10,7 +10,7 @@ pipelines:
           image: amazon/aws-cli:2.3.3
           script:
             # More details https://docs.aws.amazon.com/cli/latest/reference/cloudformation/validate-template.html
-            - aws cloudformation validate-template --template-body file://template.yaml
+            - aws cloudformation validate-template --template-body file://bbbackup_cf.json
       - step:
           name: Lint the template
           image: python:3.8
@@ -25,7 +25,7 @@ pipelines:
             name: Validate with AWS
             image: amazon/aws-cli:2.3.3
             script:
-              - aws cloudformation validate-template --template-body file://template.yaml
+              - aws cloudformation validate-template --template-body file://bbbackup_cf.json
         - step:
             name: Security Scan
             script:
