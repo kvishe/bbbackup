@@ -43,7 +43,7 @@ pipelines:
               variables:
                 AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
                 AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
-                AWS_DEFAULT_REGION: 'us-east-1'
+                AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
                 STACK_NAME: 'bbbackup'
                 TEMPLATE: 'bbbackup_cf.json'
                 WAIT: 'true'
@@ -51,8 +51,8 @@ pipelines:
                   [{
                     "ParameterKey": "BitBucketUserId",
                     "ParameterValue": $BBUserId
-                   },
-                   {
+                    },
+                    {
                       "ParameterKey": "BitBucketAppPassword",
                       "ParameterValue": $BBAppPassword
                     },
@@ -87,7 +87,5 @@ pipelines:
                     {
                         "ParameterKey": "EFSVolumeName",
                         "ParameterValue": "bbbackup"
-                    },
-
-                  }]
+                    }]
                 CAPABILITIES: ['CAPABILITY_NAMED_IAM']
